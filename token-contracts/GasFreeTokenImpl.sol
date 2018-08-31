@@ -8,6 +8,8 @@ import "./GasFreeToken.sol";
  */
 contract GasFreeTokenImpl is GasFreeToken {
   using SafeMath for uint256;
+  
+  enum methodType {TRANSFER, TRANSFER_FROM, APPROVE}
 
   mapping (address => uint256) balances;
   mapping(address => uint256) public nonceValue;
@@ -71,12 +73,12 @@ contract GasFreeTokenImpl is GasFreeToken {
   * @param _actorAddress address The address which tokens are being sent from
   * @param _to The address to transfer to
   * @param _value uint256 the amount of tokens to be transferred
-  * @param _v | _r | _s A hashed nonce that is coupled to function arguments to 
+  * @param _v _r _s A hashed nonce that is coupled to function arguments to 
   * prevent frontrunning attacks and allow third parties to subsidize gas costs
   */
   function verifyTransfer(address _actorAddress, address _to, uint256 _value, uint8 _v, bytes32 _r, bytes32 _s) private {
     bytes32 argumentsHash = keccak256(abi.encodePacked(_actorAddress, _to, _value));
-    bytes32 nonceHash = keccak256(abi.encodePacked(argumentsHash, 'transfer', nonceValue[_actorAddress]));
+    bytes32 nonceHash = keccak256(abi.encodePacked(argumentsHash, methodType.TRANSFER, nonceValue[_actorAddress]));
     bytes memory prefix = '\x19Ethereum Signed Message:\n32';
     bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, nonceHash));
     address recoveredAddress = ecrecover(prefixedHash, _v, _r, _s);
@@ -133,12 +135,12 @@ contract GasFreeTokenImpl is GasFreeToken {
   * @param _from address The address which you want to send tokens from
   * @param _to address The address which you want to transfer to
   * @param _value The amount to be transferred
-  * @param _v | _r | _s A hashed nonce that is coupled to function arguments to 
+  * @param _v _r _s A hashed nonce that is coupled to function arguments to 
   * prevent frontrunning attacks and allow third parties to subsidize gas costs
   */
   function verifyTransferFrom(address _actorAddress, address _from, address _to, uint256 _value, uint8 _v, bytes32 _r, bytes32 _s) private {
     bytes32 argumentsHash = keccak256(abi.encodePacked(_actorAddress, _from, _to, _value));
-    bytes32 nonceHash = keccak256(abi.encodePacked(argumentsHash, 'transferFrom', nonceValue[_actorAddress]));
+    bytes32 nonceHash = keccak256(abi.encodePacked(argumentsHash, methodType.TRANSFER_FROM, nonceValue[_actorAddress]));
     bytes memory prefix = '\x19Ethereum Signed Message:\n32';
     bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, nonceHash));
     address recoveredAddress = ecrecover(prefixedHash, _v, _r, _s);
@@ -171,7 +173,7 @@ contract GasFreeTokenImpl is GasFreeToken {
   * @param _actorAddress address The address which is enacting the approval
   * @param _spender The address which will spend the funds.
   * @param _value The amount of tokens to be spent.
-  * @param _v | _r | _s A hashed nonce that is coupled to function arguments to 
+  * @param _v _r _s A hashed nonce that is coupled to function arguments to 
   * prevent frontrunning attacks and allow third parties to subsidize gas costs
   */
   function approve(address _actorAddress, address _spender, uint256 _value, uint8 _v, bytes32 _r, bytes32 _s) public returns (bool) {
@@ -190,12 +192,12 @@ contract GasFreeTokenImpl is GasFreeToken {
   * @param _actorAddress address The address which is enacting the approval
   * @param _spender The address which will spend the funds.
   * @param _value The amount of tokens to be spent.
-  * @param _v | _r | _s A hashed nonce that is coupled to function arguments to 
+  * @param _v _r _s A hashed nonce that is coupled to function arguments to 
   * prevent frontrunning attacks and allow third parties to subsidize gas costs
   */
   function verifyApprove(address _actorAddress, address _spender, uint256 _value, uint8 _v, bytes32 _r, bytes32 _s) private {
     bytes32 argumentsHash = keccak256(abi.encodePacked(_actorAddress, _spender, _value));
-    bytes32 nonceHash = keccak256(abi.encodePacked(argumentsHash, 'approve', nonceValue[_actorAddress]));
+    bytes32 nonceHash = keccak256(abi.encodePacked(argumentsHash, methodType.APPROVE, nonceValue[_actorAddress]));
     bytes memory prefix = '\x19Ethereum Signed Message:\n32';
     bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, nonceHash));
     address recoveredAddress = ecrecover(prefixedHash, _v, _r, _s);
